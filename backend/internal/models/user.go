@@ -12,6 +12,7 @@ const (
 )
 
 type User struct {
+	Name         string `gorm:"not null"`
 	Email        string `gorm:"unique;not null"`
 	PasswordHash string `gorm:"not null"`
 	Role         Role   `gorm:"type:varchar(10);default:'user'"`
