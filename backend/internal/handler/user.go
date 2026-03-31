@@ -22,13 +22,8 @@ func CreateUser(c *gin.Context) {
 		c.JSON(400, gin.H{"error": "Invalid request"})
 		return
 	}
-	if user.Email == "" || user.PasswordHash == "" {
-		c.JSON(400, gin.H{"error": "Email and password are required"})
-		return
-	}
-	user.PasswordHash, _ = auth.HashPassword(user.PasswordHash)
-	if err := DB.Create(&user).Error; err != nil {
-		c.JSON(500, gin.H{"error": "Failed to create user"})
+	if valid, errData := auth.CredentialCheck(user, c); !valid {
+		c.JSON(400, errData)
 		return
 	}
 	c.JSON(201, gin.H{"status": "User created successfully", "user": user})
@@ -69,5 +64,13 @@ func LoginUser(c *gin.Context) {
 		c.JSON(401, gin.H{"error": "Invalid email or password"})
 		return
 	}
-	c.JSON(200, gin.H{"status": "Login successful", "user": user})
+	token, err := auth.CreateToken(user.ID, user.Username, "user")
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Failed to generate token"})
+		return
+	}
+	c.JSON(201, gin.H{
+		"role":  "user",
+		"token": token,
+	})
 }

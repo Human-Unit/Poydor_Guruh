@@ -1,14 +1,10 @@
 package auth
 
 import (
+	"github.com/golang-jwt/jwt"
+	"gorm.io/gorm"
 	"os"
 	"time"
-
-	"app/internal/models"
-
-	"github.com/golang-jwt/jwt"
-	"golang.org/x/crypto/bcrypt"
-	"gorm.io/gorm"
 )
 
 func getSecretKey() []byte {
@@ -58,18 +54,4 @@ func CreateAdminToken(role string) (string, error) {
 		return "", err
 	}
 	return token.SignedString(getSecretKey())
-}
-
-func HashPassword(password string) (string, error) {
-	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
-	return string(hashedBytes), err
-}
-
-func CheckPasswordHash(password, email string) bool {
-	var User models.User
-	if er := DB.Where("email = ?", email).First(&User).Error; er != nil {
-		return false
-	}
-	err := bcrypt.CompareHashAndPassword([]byte(User.PasswordHash), []byte(password))
-	return err == nil
 }
