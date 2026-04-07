@@ -21,7 +21,14 @@ func main() {
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
 	}
-	if err := db.AutoMigrate(&models.User{}, &models.Question{}, &models.Category{}); err != nil {
+	if err := db.AutoMigrate(
+		&models.User{},
+		&models.Category{},
+		&models.Lesson{},
+		&models.Question{},
+		&models.QuizResult{},
+		&models.Answer{},
+	); err != nil {
 		log.Fatal("Failed to auto-migrate database:", err)
 	}
 	handler.SetDB(db)

@@ -6,25 +6,24 @@ type Category struct {
 	ID   uint   `gorm:"primaryKey"`
 	Name string `gorm:"unique;not null"`
 
-	Questions []Question
+	Lessons []Lesson
 }
 
 type Lesson struct {
 	gorm.Model
-	topics []Topic
+
+	Name string `gorm:"not null"`
+
+	CategoryID uint
+	Category   Category
+
+	Questions []Question
+}
+type CreateLessonRequest struct {
+	Name       string `json:"name" binding:"required"`
+	CategoryID uint   `json:"category_id" binding:"required"`
 }
 
-type Topic struct {
-	gorm.Model
-	topicname string
-	questions []Question
-	videoURL  string
-	chapters  []Chapter
-}
-
-type Chapter struct {
-	gorm.Model
-	chaptername string
-	videoURL    string
-	questions   []Question
+type CreateCategoryRequest struct {
+	Name string `json:"name" binding:"required"`
 }

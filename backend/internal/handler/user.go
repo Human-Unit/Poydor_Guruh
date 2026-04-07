@@ -6,6 +6,8 @@ import (
 
 	"app/internal/auth"
 
+	"strconv"
+
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
@@ -73,4 +75,28 @@ func LoginUser(c *gin.Context) {
 		"role":  "user",
 		"token": token,
 	})
+}
+
+func ListLessons(c *gin.Context) {
+	var lessons []models.Lesson
+	if err := DB.Preload("Category").Find(&lessons).Error; err != nil {
+		c.JSON(500, gin.H{"error": "Failed to retrieve lessons"})
+		return
+	}
+	c.JSON(200, lessons)
+}
+
+func ListQuestions(c *gin.Context) {
+	lessonIDParam := c.Param("lesson_id")
+	lessonID, err := strconv.ParseUint(lessonIDParam, 10, 64)
+	if err != nil {
+		c.JSON(400, gin.H{"error": "Invalid lesson ID"})
+		return
+	}
+	var questions []models.Question
+	if err := DB.Where("lesson_id = ?", lessonID).Find(&questions).Error; err != nil {
+		c.JSON(500, gin.H{"error": "Failed to retrieve questions"})
+		return
+	}
+	c.JSON(200, questions)
 }
