@@ -2,28 +2,36 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/quiz_provider.dart';
-import '../widgets/option_card.dart';
 
 class QuizScreen extends ConsumerWidget {
   const QuizScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final quizState = ref.watch(quizProvider);
-    final quizNotifier = ref.read(quizProvider.notifier);
+    ref.listen<QuizState>(quizProvider, (prev, next) {
+      if (next.isFinished && (prev == null || !prev.isFinished)) {
+        context.go('/result');
+      }
+    });
 
-    if (quizState.isLoading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    final state = ref.watch(quizProvider);
+
+    if (state.isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator(color: Color(0xFF6C63FF))),
+      );
     }
 
-    if (quizState.questions.isEmpty) {
+    if (state.questions.isEmpty) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Error')),
         body: Center(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('Failed to load questions'),
+              const Icon(Icons.error_outline, size: 56, color: Colors.grey),
+              const SizedBox(height: 16),
+              const Text('No questions found', style: TextStyle(color: Colors.grey)),
+              const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () => context.pop(),
                 child: const Text('Go Back'),
@@ -34,81 +42,169 @@ class QuizScreen extends ConsumerWidget {
       );
     }
 
-    if (quizState.isFinished) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        context.go('/result');
-      });
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    if (state.isFinished) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator(color: Color(0xFF6C63FF))));
     }
 
-    final currentQuestion = quizState.questions[quizState.currentQuestionIndex];
-    final progress = (quizState.currentQuestionIndex + 1) / quizState.questions.length;
+    final q = state.questions[state.currentQuestionIndex];
+    final options = [q.optionA, q.optionB, q.optionC, q.optionD];
+    final progress = (state.currentQuestionIndex + 1) / state.questions.length;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Question ${quizState.currentQuestionIndex + 1} of ${quizState.questions.length}'),
-        centerTitle: true,
-      ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              LinearProgressIndicator(value: progress),
-              const SizedBox(height: 32),
-              Text(
-                currentQuestion.question,
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+        child: Column(
+          children: [
+            // Top bar
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => context.pop(),
+                  ),
+                  Expanded(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: LinearProgressIndicator(
+                        value: progress,
+                        minHeight: 10,
+                        backgroundColor: const Color(0xFF2E2E3E),
+                        color: const Color(0xFF6C63FF),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    '${state.currentQuestionIndex + 1}/${state.questions.length}',
+                    style: const TextStyle(color: Colors.grey, fontWeight: FontWeight.bold),
+                  ),
+                ],
               ),
-              const SizedBox(height: 32),
-              Expanded(
-                child: ListView.separated(
-                  itemCount: currentQuestion.options.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 16),
-                  itemBuilder: (context, index) {
-                    final isSelected = quizState.selectedOptionIndex == index;
-                    bool isCorrect = false;
-                    bool isWrong = false;
+            ),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+                children: [
+                  const SizedBox(height: 12),
+                  Text(
+                    q.text,
+                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white, height: 1.5),
+                  ),
+                  const SizedBox(height: 32),
+                  ...List.generate(options.length, (i) {
+                    final isSelected = state.selectedOptionIndex == i;
+                    final isChecked = state.isAnswerChecked;
+                    final isCorrect = isChecked && i == q.correctAnswer;
+                    final isWrong = isChecked && isSelected && i != q.correctAnswer;
 
-                    if (quizState.isAnswerChecked) {
-                      if (index == currentQuestion.correct_answer) {
-                        isCorrect = true;
-                      } else if (isSelected) {
-                        isWrong = true;
-                      }
+                    Color borderColor = const Color(0xFF2E2E3E);
+                    Color bgColor = const Color(0xFF1E1E2E);
+                    Color textColor = Colors.white;
+                    Widget? trailingIcon;
+
+                    if (isCorrect) {
+                      borderColor = const Color(0xFF4CAF50);
+                      bgColor = const Color(0xFF4CAF50).withValues(alpha: 0.12);
+                      trailingIcon = const Icon(Icons.check_circle, color: Color(0xFF4CAF50));
+                    } else if (isWrong) {
+                      borderColor = Colors.red;
+                      bgColor = Colors.red.withValues(alpha: 0.1);
+                      textColor = Colors.red;
+                      trailingIcon = const Icon(Icons.cancel, color: Colors.red);
+                    } else if (isSelected) {
+                      borderColor = const Color(0xFF6C63FF);
+                      bgColor = const Color(0xFF6C63FF).withValues(alpha: 0.12);
                     }
 
-                    return OptionCard(
-                      text: currentQuestion.options[index],
-                      isSelected: isSelected,
-                      isCorrect: isCorrect,
-                      isWrong: isWrong,
-                      onTap: () => quizNotifier.selectOption(index),
+                    return GestureDetector(
+                      onTap: isChecked ? null : () => ref.read(quizProvider.notifier).selectOption(i),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        margin: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: bgColor,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: borderColor, width: 2),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 32,
+                              height: 32,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: isSelected || isCorrect ? borderColor.withValues(alpha: 0.2) : const Color(0xFF2E2E3E),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  String.fromCharCode(65 + i),
+                                  style: TextStyle(
+                                    color: isCorrect ? const Color(0xFF4CAF50) : isWrong ? Colors.red : isSelected ? const Color(0xFF6C63FF) : Colors.grey,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(child: Text(options[i], style: TextStyle(color: textColor, fontSize: 15))),
+                            if (trailingIcon != null) trailingIcon,
+                          ],
+                        ),
+                      ),
                     );
-                  },
+                  }),
+                  if (state.isAnswerChecked && q.explanation != null && q.explanation!.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF2E2E3E),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Explanation', style: TextStyle(color: Color(0xFF6C63FF), fontWeight: FontWeight.bold, fontSize: 13)),
+                          const SizedBox(height: 6),
+                          Text(q.explanation!, style: const TextStyle(color: Colors.grey, fontSize: 13, height: 1.5)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            // Bottom button
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: state.selectedOptionIndex == null
+                      ? null
+                      : () {
+                          if (!state.isAnswerChecked) {
+                            ref.read(quizProvider.notifier).checkAnswer();
+                          } else {
+                            ref.read(quizProvider.notifier).nextQuestion();
+                          }
+                        },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: state.isAnswerChecked
+                        ? (state.selectedOptionIndex == q.correctAnswer ? const Color(0xFF4CAF50) : Colors.red)
+                        : const Color(0xFF6C63FF),
+                    disabledBackgroundColor: const Color(0xFF2E2E3E),
+                  ),
+                  child: Text(
+                    state.isAnswerChecked ? 'CONTINUE' : 'CHECK',
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white),
+                  ),
                 ),
               ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.all(16),
-                  backgroundColor: quizState.isAnswerChecked ? Colors.green : Colors.blue,
-                ),
-                onPressed: () {
-                  if (!quizState.isAnswerChecked) {
-                    quizNotifier.checkAnswer();
-                  } else {
-                    quizNotifier.nextQuestion();
-                  }
-                },
-                child: Text(
-                  quizState.isAnswerChecked ? 'CONTINUE' : 'CHECK',
-                  style: const TextStyle(fontSize: 18, color: Colors.white),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

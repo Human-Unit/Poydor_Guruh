@@ -12,10 +12,10 @@ const (
 )
 
 type User struct {
-	Name         string `gorm:"not null"`
-	Username     string `gorm:"unique;not null"`
-	Email        string `gorm:"unique;not null"`
-	PasswordHash string `gorm:"not null"`
-	Role         Role   `gorm:"type:varchar(10);default:'user'"`
+	Name         string `gorm:"default:'unknown';not null" json:"name"`
+	Username     string `gorm:"unique;not null" json:"username"`
+	Email        string `gorm:"unique;not null" json:"email"`
+	PasswordHash string `gorm:"not null" json:"password"` // Mapped from 'password' in JSON
+	Role         Role   `gorm:"type:varchar(10);default:'user'" json:"role"`
 	gorm.Model
 }

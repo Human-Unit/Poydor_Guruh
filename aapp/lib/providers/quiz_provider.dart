@@ -14,6 +14,7 @@ class QuizState {
   final int? selectedOptionIndex;
   final bool isAnswerChecked;
   final bool isLoading;
+  final List<Map<String, dynamic>> answers; // To store answers for submission
 
   QuizState({
     required this.questions,
@@ -23,6 +24,7 @@ class QuizState {
     this.selectedOptionIndex,
     this.isAnswerChecked = false,
     this.isLoading = false,
+    this.answers = const [],
   });
 
   QuizState cloneWith({
@@ -34,6 +36,7 @@ class QuizState {
     bool clearSelectedOption = false,
     bool? isAnswerChecked,
     bool? isLoading,
+    List<Map<String, dynamic>>? answers,
   }) {
     return QuizState(
       questions: questions ?? this.questions,
@@ -43,6 +46,7 @@ class QuizState {
       selectedOptionIndex: clearSelectedOption ? null : (selectedOptionIndex ?? this.selectedOptionIndex),
       isAnswerChecked: isAnswerChecked ?? this.isAnswerChecked,
       isLoading: isLoading ?? this.isLoading,
+      answers: answers ?? this.answers,
     );
   }
 }
@@ -52,17 +56,18 @@ class QuizNotifier extends StateNotifier<QuizState> {
 
   QuizNotifier() : super(QuizState(questions: []));
 
-  Future<void> startQuiz() async {
+  Future<void> startQuiz(int lessonId) async {
     state = state.cloneWith(
         isLoading: true,
         isFinished: false,
         currentQuestionIndex: 0,
         score: 0,
         clearSelectedOption: true,
-        isAnswerChecked: false);
+        isAnswerChecked: false,
+        answers: []);
     try {
-      final questions = await _apiService.getQuestions();
-      state = QuizState(questions: questions, isLoading: false);
+      final questions = await _apiService.getQuestions(lessonId);
+      state = QuizState(questions: questions, isLoading: false, answers: []);
     } catch (e) {
       state = state.cloneWith(isLoading: false);
     }
@@ -76,10 +81,19 @@ class QuizNotifier extends StateNotifier<QuizState> {
   void checkAnswer() {
     if (state.selectedOptionIndex == null || state.isAnswerChecked) return;
 
-    final isCorrect = state.selectedOptionIndex == state.questions[state.currentQuestionIndex].correct_answer;
+    final currentQuestion = state.questions[state.currentQuestionIndex];
+    final isCorrect = state.selectedOptionIndex == currentQuestion.correctAnswer;
+    
+    final newAnswers = List<Map<String, dynamic>>.from(state.answers);
+    newAnswers.add({
+      'question_id': currentQuestion.id,
+      'selected_answer': state.selectedOptionIndex,
+    });
+
     state = state.cloneWith(
       isAnswerChecked: true,
       score: isCorrect ? state.score + 1 : state.score,
+      answers: newAnswers,
     );
   }
 
@@ -93,8 +107,10 @@ class QuizNotifier extends StateNotifier<QuizState> {
     } else {
       state = state.cloneWith(isFinished: true);
       try {
-        await _apiService.submitResult(state.score, state.questions.length);
-      } catch (e) {}
+        await _apiService.submitResult(state.answers);
+      } catch (e) {
+        // Handle error if needed
+      }
     }
   }
 }

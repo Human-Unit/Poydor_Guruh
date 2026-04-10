@@ -11,29 +11,41 @@ class RegisterScreen extends ConsumerStatefulWidget {
 }
 
 class _RegisterScreenState extends ConsumerState<RegisterScreen> {
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  bool _isLoading = false;
-  String _errorMessage = '';
+  final _nameCtrl = TextEditingController();
+  final _usernameCtrl = TextEditingController();
+  final _emailCtrl = TextEditingController();
+  final _passCtrl = TextEditingController();
+  bool _loading = false;
+  bool _obscure = true;
+  String _error = '';
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    _usernameCtrl.dispose();
+    _emailCtrl.dispose();
+    _passCtrl.dispose();
+    super.dispose();
+  }
 
   Future<void> _register() async {
-    final email = _emailController.text.trim();
-    final password = _passwordController.text.trim();
+    final name = _nameCtrl.text.trim();
+    final username = _usernameCtrl.text.trim();
+    final email = _emailCtrl.text.trim();
+    final pass = _passCtrl.text.trim();
 
-    if (email.isNotEmpty && password.isNotEmpty) {
-      setState(() {
-        _isLoading = true;
-        _errorMessage = '';
-      });
-
-      try {
-        await ref.read(authProvider.notifier).register(email, password);
-        if (mounted) context.go('/home');
-      } catch (e) {
-        setState(() => _errorMessage = 'Registration failed. Try again.');
-      } finally {
-        if (mounted) setState(() => _isLoading = false);
-      }
+    if (name.isEmpty || username.isEmpty || email.isEmpty || pass.isEmpty) {
+      setState(() => _error = 'Please fill all fields.');
+      return;
+    }
+    setState(() { _loading = true; _error = ''; });
+    try {
+      await ref.read(authProvider.notifier).register(name, username, email, pass);
+      if (mounted) context.go('/home');
+    } catch (e) {
+      if (mounted) setState(() => _error = 'Registration failed. Try again.');
+    } finally {
+      if (mounted) setState(() => _loading = false);
     }
   }
 
@@ -41,46 +53,64 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Register'),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios),
+          onPressed: () => context.pop(),
+        ),
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Icon(Icons.person_add, size: 80, color: Color.fromARGB(255, 208, 113, 113)),
-              const SizedBox(height: 24),
-              if (_errorMessage.isNotEmpty)
-                Text(_errorMessage, style: const TextStyle(color: Color.fromARGB(255, 1, 54, 133)), textAlign: TextAlign.center),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _emailController,
-                decoration: const InputDecoration(
-                  labelText: 'Email',
-                  border: OutlineInputBorder(),
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(28),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Text(
+                  'Create Account',
+                  style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.white),
                 ),
-                keyboardType: TextInputType.emailAddress,
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _passwordController,
-                decoration: const InputDecoration(
-                  labelText: 'Password',
-                  border: OutlineInputBorder(),
+                const SizedBox(height: 6),
+                const Text('Join and start practicing', style: TextStyle(color: Colors.grey)),
+                const SizedBox(height: 32),
+                if (_error.isNotEmpty) ...[
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+                    ),
+                    child: Text(_error, style: const TextStyle(color: Colors.red), textAlign: TextAlign.center),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+                TextField(controller: _nameCtrl, decoration: const InputDecoration(labelText: 'Full Name', prefixIcon: Icon(Icons.person_outline))),
+                const SizedBox(height: 14),
+                TextField(controller: _usernameCtrl, decoration: const InputDecoration(labelText: 'Username', prefixIcon: Icon(Icons.alternate_email))),
+                const SizedBox(height: 14),
+                TextField(controller: _emailCtrl, keyboardType: TextInputType.emailAddress, decoration: const InputDecoration(labelText: 'Email', prefixIcon: Icon(Icons.email_outlined))),
+                const SizedBox(height: 14),
+                TextField(
+                  controller: _passCtrl,
+                  obscureText: _obscure,
+                  decoration: InputDecoration(
+                    labelText: 'Password',
+                    prefixIcon: const Icon(Icons.lock_outline),
+                    suffixIcon: IconButton(
+                      icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility),
+                      onPressed: () => setState(() => _obscure = !_obscure),
+                    ),
+                  ),
                 ),
-                obscureText: true,
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: _isLoading ? null : _register,
-                style: ElevatedButton.styleFrom(padding: const EdgeInsets.all(16)),
-                child: _isLoading ? const CircularProgressIndicator() : const Text('REGISTER'),
-              ),
-            ],
+                const SizedBox(height: 28),
+                ElevatedButton(
+                  onPressed: _loading ? null : _register,
+                  child: _loading
+                      ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                      : const Text('Create Account'),
+                ),
+              ],
+            ),
           ),
         ),
       ),

@@ -21,14 +21,39 @@ func SetDB(database *gorm.DB) {
 func CreateUser(c *gin.Context) {
 	var user models.User
 	if err := c.ShouldBindJSON(&user); err != nil {
-		c.JSON(400, gin.H{"error": "Invalid request"})
+		c.JSON(400, gin.H{"error": "Invalid request format"})
 		return
 	}
+
+	// Validate credentials (duplicates, email format, etc.)
 	if valid, errData := auth.CredentialCheck(user, c); !valid {
 		c.JSON(400, errData)
 		return
 	}
-	c.JSON(201, gin.H{"status": "User created successfully", "user": user})
+
+	// Hash the password before saving
+	hashedPassword, err := auth.HashPassword(user.PasswordHash)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Failed to hash password"})
+		return
+	}
+	user.PasswordHash = hashedPassword
+
+	// Save user to database
+	if err := DB.Create(&user).Error; err != nil {
+		c.JSON(500, gin.H{"error": "Failed to create user"})
+		return
+	}
+
+	c.JSON(201, gin.H{
+		"status": "User created successfully",
+		"user": gin.H{
+			"id":       user.ID,
+			"name":     user.Name,
+			"username": user.Username,
+			"email":    user.Email,
+		},
+	})
 }
 
 func LoginUser(c *gin.Context) {
@@ -62,7 +87,7 @@ func LoginUser(c *gin.Context) {
 		c.JSON(401, gin.H{"error": "Invalid email or password"})
 		return
 	}
-	if !auth.CheckPasswordHash(req.Password, user.Email) {
+	if !auth.CheckPasswordHash(req.Password, user.PasswordHash) {
 		c.JSON(401, gin.H{"error": "Invalid email or password"})
 		return
 	}

@@ -21,11 +21,8 @@ func SetupRoutes(r *gin.Engine) {
 	user.Use(middleware.AuthMiddleware()) // JWT required
 	{
 		user.POST("/quiz/submit", handler.SubmitQuiz)
-
-		// Get lessons and questions
 		user.GET("/lessons", handler.GetLessons)
 		user.GET("/lessons/:lesson_id/questions", handler.GetQuestionsByLessonID)
-		user.POST("/quiz/submit", handler.SubmitQuiz)
 		user.GET("/me/progress", handler.GetUserProgress)
 	}
 

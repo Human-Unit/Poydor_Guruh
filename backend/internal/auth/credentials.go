@@ -13,12 +13,8 @@ func HashPassword(password string) (string, error) {
 	return string(hashedBytes), err
 }
 
-func CheckPasswordHash(password, email string) bool {
-	var User models.User
-	if er := DB.Where("email = ?", email).First(&User).Error; er != nil {
-		return false
-	}
-	err := bcrypt.CompareHashAndPassword([]byte(User.PasswordHash), []byte(password))
+func CheckPasswordHash(password, hash string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
 }
 
@@ -49,7 +45,7 @@ func CredentialCheck(user models.User, c *gin.Context) (bool, gin.H) {
 	if user.Email == "" || user.PasswordHash == "" {
 		return false, gin.H{"error": "Email and password are required"}
 	}
-	if RegexEmail(user.Email) {
+	if !RegexEmail(user.Email) {
 		return false, gin.H{"error": "Invalid email format"}
 	}
 	if IsExistsEmail(user.Email) {

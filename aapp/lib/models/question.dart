@@ -1,35 +1,42 @@
+import 'lesson.dart';
+
 class Question {
   final int id;
-  final String question;
-  final List<String> options;
-  final int correct_answer;
-  final String? imageUrl;
+  final int lessonId;
+  final Lesson? lesson;
+  final String text;
+  final String optionA;
+  final String optionB;
+  final String optionC;
+  final String optionD;
+  final String? explanation;
+  final int correctAnswer;
 
-  const Question({
+  Question({
     required this.id,
-    required this.question,
-    required this.options,
-    required this.correct_answer,
-    this.imageUrl,
+    required this.lessonId,
+    this.lesson,
+    required this.text,
+    required this.optionA,
+    required this.optionB,
+    required this.optionC,
+    required this.optionD,
+    this.explanation,
+    required this.correctAnswer,
   });
 
   factory Question.fromJson(Map<String, dynamic> json) {
     return Question(
-      id: json['id'] as int,
-      question: json['question'] as String,
-      options: List<String>.from(json['options']),
-      correct_answer: json['correct_answer'] as int,
-      imageUrl: json['imageUrl'] as String?,
+      id: json['ID'] ?? json['id'] ?? 0,
+      lessonId: json['LessonID'] ?? json['lesson_id'] ?? 0,
+      lesson: json['Lesson'] != null ? Lesson.fromJson(json['Lesson']) : null,
+      text: json['Text'] ?? json['text'] ?? '',
+      optionA: json['OptionA'] ?? json['option_a'] ?? '',
+      optionB: json['OptionB'] ?? json['option_b'] ?? '',
+      optionC: json['OptionC'] ?? json['option_c'] ?? '',
+      optionD: json['OptionD'] ?? json['option_d'] ?? '',
+      explanation: json['Explanation'] ?? json['explanation'],
+      correctAnswer: json['CorrectAnswer'] ?? json['correct_answer'] ?? 0,
     );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'question': question,
-      'options': options,
-      'correct_answer': correct_answer,
-      'imageUrl': imageUrl,
-    };
   }
 }
