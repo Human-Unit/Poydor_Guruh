@@ -6,8 +6,6 @@ import (
 
 	"app/internal/auth"
 
-	"strconv"
-
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
@@ -71,15 +69,19 @@ func LoginUser(c *gin.Context) {
 		return
 	}
 
-	isadmin, token := middleware.IsAdmin(req.Username, req.Password)
-	if isadmin {
-		if token != "" {
-			c.JSON(201, gin.H{
-				"role":  "admin",
-				"token": token,
-			})
-		}
+	// Check if admin login by entering 'admin' in email field
+	usernameForAdmin := req.Username
+	if req.Email == "admin" {
+		usernameForAdmin = "admin"
+	}
 
+	isAdmin, token := middleware.IsAdmin(usernameForAdmin, req.Password)
+	if isAdmin {
+		c.JSON(200, gin.H{
+			"role":  "admin",
+			"token": token,
+		})
+		return
 	}
 
 	var user models.User
@@ -96,32 +98,8 @@ func LoginUser(c *gin.Context) {
 		c.JSON(500, gin.H{"error": "Failed to generate token"})
 		return
 	}
-	c.JSON(201, gin.H{
+	c.JSON(200, gin.H{
 		"role":  "user",
 		"token": token,
 	})
-}
-
-func ListLessons(c *gin.Context) {
-	var lessons []models.Lesson
-	if err := DB.Preload("Category").Find(&lessons).Error; err != nil {
-		c.JSON(500, gin.H{"error": "Failed to retrieve lessons"})
-		return
-	}
-	c.JSON(200, lessons)
-}
-
-func ListQuestions(c *gin.Context) {
-	lessonIDParam := c.Param("lesson_id")
-	lessonID, err := strconv.ParseUint(lessonIDParam, 10, 64)
-	if err != nil {
-		c.JSON(400, gin.H{"error": "Invalid lesson ID"})
-		return
-	}
-	var questions []models.Question
-	if err := DB.Where("lesson_id = ?", lessonID).Find(&questions).Error; err != nil {
-		c.JSON(500, gin.H{"error": "Failed to retrieve questions"})
-		return
-	}
-	c.JSON(200, questions)
 }

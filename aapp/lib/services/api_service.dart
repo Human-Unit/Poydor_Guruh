@@ -112,12 +112,19 @@ class ApiService {
     }
   }
 
-  Future<void> submitResult(List<Map<String, dynamic>> answers) async {
+  Future<void> submitResult({
+    required int lessonId,
+    required List<int> questionIds,
+    required List<int> answers,
+  }) async {
     try {
-      // Expects array format: {"answers": [{"question_id": 1, "selected_answer": 2}]}
       await _dio.post(
         '/users/quiz/submit',
-        data: {'answers': answers},
+        data: {
+          'lesson_id': lessonId,
+          'question_ids': questionIds,
+          'answers': answers,
+        },
       );
     } on DioException catch (e) {
       throw Exception('Failed to submit result: ${e.message}');

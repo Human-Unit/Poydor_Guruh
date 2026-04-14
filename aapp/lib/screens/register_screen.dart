@@ -61,6 +61,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
+            physics: const ClampingScrollPhysics(),
             padding: const EdgeInsets.all(28),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,

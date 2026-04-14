@@ -16,6 +16,7 @@ class HomeScreen extends ConsumerWidget {
     return Scaffold(
       body: SafeArea(
         child: CustomScrollView(
+          physics: const ClampingScrollPhysics(),
           slivers: [
             SliverToBoxAdapter(
               child: Padding(

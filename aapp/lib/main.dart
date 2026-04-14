@@ -15,6 +15,7 @@ class DriverExamApp extends StatelessWidget {
     return MaterialApp.router(
       title: 'Driver Exam Prep',
       debugShowCheckedModeBanner: false,
+      scrollBehavior: const AppScrollBehavior(),
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
@@ -62,4 +63,10 @@ class DriverExamApp extends StatelessWidget {
       routerConfig: appRouter,
     );
   }
+}
+
+class AppScrollBehavior extends ScrollBehavior {
+  const AppScrollBehavior();
+  @override
+  ScrollPhysics getScrollPhysics(BuildContext context) => const ClampingScrollPhysics();
 }

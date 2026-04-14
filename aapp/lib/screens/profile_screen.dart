@@ -13,6 +13,7 @@ class ProfileScreen extends ConsumerWidget {
     return Scaffold(
       body: SafeArea(
         child: ListView(
+          physics: const ClampingScrollPhysics(),
           padding: const EdgeInsets.all(24),
           children: [
             const SizedBox(height: 8),

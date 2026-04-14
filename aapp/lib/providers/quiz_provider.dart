@@ -107,7 +107,17 @@ class QuizNotifier extends StateNotifier<QuizState> {
     } else {
       state = state.cloneWith(isFinished: true);
       try {
-        await _apiService.submitResult(state.answers);
+        if (state.questions.isNotEmpty) {
+          final lessonId = state.questions.first.lessonId;
+          final questionIds = state.questions.map((q) => q.id).toList();
+          final selectedAnswers = state.answers.map((a) => a['selected_answer'] as int).toList();
+
+          await _apiService.submitResult(
+            lessonId: lessonId,
+            questionIds: questionIds,
+            answers: selectedAnswers,
+          );
+        }
       } catch (e) {
         // Handle error if needed
       }

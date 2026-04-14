@@ -84,6 +84,7 @@ class QuizScreen extends ConsumerWidget {
             ),
             Expanded(
               child: ListView(
+                physics: const ClampingScrollPhysics(),
                 padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
                 children: [
                   const SizedBox(height: 12),
