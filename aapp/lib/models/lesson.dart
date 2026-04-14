@@ -15,10 +15,10 @@ class Lesson {
 
   factory Lesson.fromJson(Map<String, dynamic> json) {
     return Lesson(
-      id: json['ID'] ?? json['id'] ?? 0,
-      name: json['Name'] ?? json['name'] ?? '',
-      categoryId: json['CategoryID'] ?? json['category_id'] ?? 0,
-      category: json['Category'] != null ? Category.fromJson(json['Category']) : null,
+      id: json['id'] ?? 0,
+      name: json['name'] ?? '',
+      categoryId: json['category_id'] ?? 0,
+      category: json['category'] != null ? Category.fromJson(json['category']) : null,
     );
   }
 }

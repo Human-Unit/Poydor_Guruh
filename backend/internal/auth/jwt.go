@@ -8,7 +8,11 @@ import (
 )
 
 func getSecretKey() []byte {
-	return []byte(os.Getenv("JWT_SECRET"))
+	secret := os.Getenv("JWT_SECRET")
+	if secret == "" {
+		secret = os.Getenv("SecretKey")
+	}
+	return []byte(secret)
 }
 
 type CustomClaims struct {

@@ -77,6 +77,17 @@ func GetQuestionsByLessonID(c *gin.Context) {
 	c.JSON(http.StatusOK, questions)
 }
 
+// GetQuestions returns all questions (admin)
+func GetQuestions(c *gin.Context) {
+	var questions []models.Question
+	if err := DB.Preload("Lesson").Find(&questions).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve questions"})
+		return
+	}
+
+	c.JSON(http.StatusOK, questions)
+}
+
 // DeleteQuestion deletes a question by ID
 func DeleteQuestion(c *gin.Context) {
 	questionIDParam := c.Param("id")
@@ -122,6 +133,7 @@ func UpdateQuestion(c *gin.Context) {
 	}
 
 	// Update fields
+	question.LessonID = req.LessonID
 	question.Text = req.Text
 	question.OptionA = req.OptionA
 	question.OptionB = req.OptionB

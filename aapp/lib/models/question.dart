@@ -27,16 +27,16 @@ class Question {
 
   factory Question.fromJson(Map<String, dynamic> json) {
     return Question(
-      id: json['ID'] ?? json['id'] ?? 0,
-      lessonId: json['LessonID'] ?? json['lesson_id'] ?? 0,
-      lesson: json['Lesson'] != null ? Lesson.fromJson(json['Lesson']) : null,
-      text: json['Text'] ?? json['text'] ?? '',
-      optionA: json['OptionA'] ?? json['option_a'] ?? '',
-      optionB: json['OptionB'] ?? json['option_b'] ?? '',
-      optionC: json['OptionC'] ?? json['option_c'] ?? '',
-      optionD: json['OptionD'] ?? json['option_d'] ?? '',
-      explanation: json['Explanation'] ?? json['explanation'],
-      correctAnswer: json['CorrectAnswer'] ?? json['correct_answer'] ?? 0,
+      id: json['id'] ?? 0,
+      lessonId: json['lesson_id'] ?? 0,
+      lesson: json['lesson'] != null ? Lesson.fromJson(json['lesson']) : null,
+      text: json['text'] ?? '',
+      optionA: json['option_a'] ?? '',
+      optionB: json['option_b'] ?? '',
+      optionC: json['option_c'] ?? '',
+      optionD: json['option_d'] ?? '',
+      explanation: json['explanation'],
+      correctAnswer: json['correct_answer'] ?? 0,
     );
   }
 }

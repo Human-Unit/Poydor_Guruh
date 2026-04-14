@@ -47,23 +47,24 @@ func AuthMiddleware() gin.HandlerFunc {
 			c.AbortWithStatusJSON(401, gin.H{"error": "Authorization token required"})
 			return
 		}
-		valid, err := ValidateToken(token)
-		if !valid || err != nil {
+		claims, err := ParseToken(token)
+		if err != nil {
 			c.AbortWithStatusJSON(401, gin.H{"error": "Invalid or expired token"})
 			return
 		}
+
+		customClaims := claims.(*CustomClaims)
+		c.Set("userID", customClaims.UserID)
+		c.Set("username", customClaims.Username)
+		c.Set("userRole", customClaims.Role)
+		c.Next()
 	}
 }
 
 func AdminMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		token := ExtractToken(c)
-		if token == "" {
-			c.AbortWithStatusJSON(401, gin.H{"error": "Authorization token required"})
-			return
-		}
-		validation, err := ValidateAdminToken(token)
-		if !validation || err != nil {
+		userRole, exists := c.Get("userRole")
+		if !exists || userRole != "admin" {
 			c.AbortWithStatusJSON(403, gin.H{"error": "Admin privileges required"})
 			return
 		}
@@ -93,10 +94,30 @@ func ValidateAdminToken(token string) (bool, error) {
 func ParseToken(token string) (jwt.Claims, error) {
 	claims := &CustomClaims{}
 	_, err := jwt.ParseWithClaims(token, claims, func(token *jwt.Token) (interface{}, error) {
-		return []byte(os.Getenv("JWT_SECRET")), nil
+		secret := os.Getenv("JWT_SECRET")
+		if secret == "" {
+			secret = os.Getenv("SecretKey")
+		}
+		return []byte(secret), nil
 	})
 	if err != nil {
 		return nil, err
 	}
 	return claims, nil
+}
+
+func CORSMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE")
+
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(204)
+			return
+		}
+
+		c.Next()
+	}
 }

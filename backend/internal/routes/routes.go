@@ -8,6 +8,8 @@ import (
 )
 
 func SetupRoutes(r *gin.Engine) {
+	r.Use(middleware.CORSMiddleware())
+
 	// ========================
 	// PUBLIC ROUTES
 	// ========================
@@ -47,6 +49,7 @@ func SetupRoutes(r *gin.Engine) {
 
 		// Questions
 		admin.POST("/questions", handler.CreateQuestion)
+		admin.GET("/questions", handler.GetQuestions)
 		admin.PUT("/questions/:id", handler.UpdateQuestion)
 		admin.DELETE("/questions/:id", handler.DeleteQuestion)
 
