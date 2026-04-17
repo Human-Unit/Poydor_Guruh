@@ -85,8 +85,8 @@ func LoginUser(c *gin.Context) {
 	}
 
 	var user models.User
-	if err := DB.Where("email = ?", req.Email).First(&user).Error; err != nil {
-		c.JSON(401, gin.H{"error": "Invalid email or password"})
+	if err := DB.Where("email = ? OR username = ?", req.Email, req.Email).First(&user).Error; err != nil {
+		c.JSON(401, gin.H{"error": "Invalid email/username or password"})
 		return
 	}
 	if !auth.CheckPasswordHash(req.Password, user.PasswordHash) {
@@ -101,5 +101,11 @@ func LoginUser(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"role":  "user",
 		"token": token,
+		"user": gin.H{
+			"id":       user.ID,
+			"name":     user.Name,
+			"username": user.Username,
+			"email":    user.Email,
+		},
 	})
 }

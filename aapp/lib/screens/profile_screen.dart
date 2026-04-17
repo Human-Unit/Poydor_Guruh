@@ -1,7 +1,10 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/auth_provider.dart';
+import '../providers/theme_provider.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -9,6 +12,9 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authProvider);
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+    final textColor = isDarkMode ? Colors.white : Colors.black87;
 
     return Scaffold(
       body: SafeArea(
@@ -17,7 +23,16 @@ class ProfileScreen extends ConsumerWidget {
           padding: const EdgeInsets.all(24),
           children: [
             const SizedBox(height: 8),
-            const Text('Profile', style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.white)),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Profile', style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: textColor)),
+                IconButton(
+                  icon: Icon(isDarkMode ? Icons.light_mode : Icons.dark_mode, color: textColor),
+                  onPressed: () => ref.read(themeProvider.notifier).toggleTheme(),
+                ),
+              ],
+            ),
             const SizedBox(height: 28),
             // Avatar
             Center(
@@ -33,7 +48,7 @@ class ProfileScreen extends ConsumerWidget {
                         end: Alignment.bottomRight,
                       ),
                       shape: BoxShape.circle,
-                      boxShadow: [BoxShadow(color: const Color(0xFF6C63FF).withValues(alpha: 0.4), blurRadius: 16)],
+                      boxShadow: [BoxShadow(color: const Color(0xFF6C63FF).withOpacity(0.4), blurRadius: 16)],
                     ),
                     child: Center(
                       child: Text(
@@ -49,7 +64,7 @@ class ProfileScreen extends ConsumerWidget {
             Center(
               child: Text(
                 user?.name.isNotEmpty == true ? user!.name : 'Guest',
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textColor),
               ),
             ),
             if (user?.email != null) ...[
@@ -122,12 +137,16 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final cardColor = theme.cardTheme.color ?? (isDark ? const Color(0xFF1E1E2E) : Colors.white);
+    
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1E2E),
+        color: cardColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+        border: Border.all(color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -152,11 +171,17 @@ class _InfoTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final cardColor = theme.cardTheme.color ?? (isDark ? const Color(0xFF1E1E2E) : Colors.white);
+    final textColor = isDark ? Colors.white : Colors.black87;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1E2E),
+        color: cardColor,
         borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: isDark ? Colors.transparent : Colors.black.withOpacity(0.05)),
       ),
       child: Row(
         children: [
@@ -167,7 +192,7 @@ class _InfoTile extends StatelessWidget {
             children: [
               Text(label, style: const TextStyle(color: Colors.grey, fontSize: 11)),
               const SizedBox(height: 2),
-              Text(value, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500, fontSize: 14)),
+              Text(value, style: TextStyle(color: textColor, fontWeight: FontWeight.w500, fontSize: 14)),
             ],
           ),
         ],

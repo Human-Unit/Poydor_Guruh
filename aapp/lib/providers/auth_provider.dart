@@ -3,15 +3,22 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user.dart';
 import '../services/api_service.dart';
+import 'api_provider.dart';
 
 final authProvider = StateNotifierProvider<AuthNotifier, User?>((ref) {
-  return AuthNotifier();
+  // Use the global API provider
+  final apiService = ref.read(apiServiceProvider);
+  return AuthNotifier(apiService);
 });
 
 class AuthNotifier extends StateNotifier<User?> {
-  final ApiService _apiService = ApiService();
+  final ApiService _apiService;
 
-  AuthNotifier() : super(null);
+  AuthNotifier(this._apiService) : super(null) {
+    _apiService.onUnauthorizedStream.listen((_) {
+      logout();
+    });
+  }
 
   Future<User?> initialize() async {
     final prefs = await SharedPreferences.getInstance();
@@ -34,10 +41,26 @@ class AuthNotifier extends StateNotifier<User?> {
   }
 
   Future<void> login(String email, String password) async {
-    final token = await _apiService.login(email, password);
-    if (token != null) {
-      // Create user context
-      final newUser = User(id: 0, name: '', username: '', email: email, role: 'user', token: token);
+    final responseData = await _apiService.login(email, password);
+    if (responseData != null) {
+      final token = responseData['token'] as String;
+      final userData = responseData['user'] as Map<String, dynamic>?;
+      
+      User newUser;
+      if (userData != null) {
+        newUser = User.fromJson(userData, token: token);
+      } else {
+        // Fallback for admin or unexpected response structure
+        newUser = User(
+          id: 0,
+          name: responseData['role'] == 'admin' ? 'Admin' : '',
+          username: '',
+          email: email,
+          role: responseData['role'] ?? 'user',
+          token: token,
+        );
+      }
+
       state = newUser;
       await _saveUser(newUser);
 

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io' show Platform;
@@ -7,6 +8,9 @@ import '../models/question.dart';
 
 class ApiService {
   late final Dio _dio;
+  final _unauthorizedController = StreamController<void>.broadcast();
+  
+  Stream<void> get onUnauthorizedStream => _unauthorizedController.stream;
   
   // Dynamic base URL based on platform
   static String get _baseUrl {
@@ -39,17 +43,30 @@ class ApiService {
         }
         return handler.next(options);
       },
+      onResponse: (response, handler) {
+        return handler.next(response);
+      },
+      onError: (e, handler) {
+        if (e.response?.statusCode == 401) {
+          _unauthorizedController.add(null);
+        }
+        return handler.next(e);
+      },
     ));
   }
 
-  Future<String?> login(String email, String password) async {
+  void dispose() {
+    _unauthorizedController.close();
+  }
+
+  Future<Map<String, dynamic>?> login(String email, String password) async {
     try {
       final response = await _dio.post(
         '/users/login',
         data: {'email': email, 'password': password},
       );
       if (response.statusCode == 200 || response.statusCode == 201) {
-        return response.data['token'];
+        return response.data;
       }
     } on DioException catch (e) {
       throw Exception('Failed to login: ${e.response?.data?['error'] ?? e.message}');
@@ -64,8 +81,6 @@ class ApiService {
     required String password,
   }) async {
     try {
-      // Trying with 'PasswordHash' matching the Go exact model name.
-      // Often frameworks map fields exactly, but we also include 'password' just in case.
       final response = await _dio.post(
         '/users/register',
         data: {
@@ -76,8 +91,6 @@ class ApiService {
         },
       );
       if (response.statusCode == 200 || response.statusCode == 201) {
-        // Registration sometimes returns a token, or user object.
-        // Assuming we need to login after, or it returns 'status'.
         return response.data['status'];
       }
     } on DioException catch (e) {

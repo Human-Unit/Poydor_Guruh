@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -28,7 +30,7 @@ class ResultScreen extends ConsumerWidget {
                   width: 120,
                   height: 120,
                   decoration: BoxDecoration(
-                    color: (passed ? Colors.green : Colors.red).withValues(alpha: 0.12),
+                    color: (passed ? Colors.green : Colors.red).withOpacity(0.12),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -61,7 +63,7 @@ class ResultScreen extends ConsumerWidget {
                 decoration: BoxDecoration(
                   color: const Color(0xFF1E1E2E),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                  border: Border.all(color: Colors.white.withOpacity(0.05)),
                 ),
                 child: Column(
                   children: [
@@ -139,9 +141,9 @@ class _StatChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
+        border: Border.all(color: color.withOpacity(0.3)),
       ),
       child: Column(
         children: [

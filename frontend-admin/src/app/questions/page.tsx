@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { api } from '@/lib/axios';
 import { Plus, Edit2, Trash2, X } from 'lucide-react';
 import styles from '@/components/Shared.module.css';

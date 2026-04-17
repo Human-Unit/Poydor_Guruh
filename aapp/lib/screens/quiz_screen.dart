@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -33,7 +35,13 @@ class QuizScreen extends ConsumerWidget {
               const Text('No questions found', style: TextStyle(color: Colors.grey)),
               const SizedBox(height: 20),
               ElevatedButton(
-                onPressed: () => context.pop(),
+                onPressed: () {
+                  if (context.canPop()) {
+                    context.pop();
+                  } else {
+                    context.go('/home');
+                  }
+                },
                 child: const Text('Go Back'),
               ),
             ],
@@ -61,7 +69,13 @@ class QuizScreen extends ConsumerWidget {
                 children: [
                   IconButton(
                     icon: const Icon(Icons.close),
-                    onPressed: () => context.pop(),
+                    onPressed: () {
+                      if (context.canPop()) {
+                        context.pop();
+                      } else {
+                        context.go('/home');
+                      }
+                    },
                   ),
                   Expanded(
                     child: ClipRRect(
@@ -106,16 +120,16 @@ class QuizScreen extends ConsumerWidget {
 
                     if (isCorrect) {
                       borderColor = const Color(0xFF4CAF50);
-                      bgColor = const Color(0xFF4CAF50).withValues(alpha: 0.12);
+                      bgColor = const Color(0xFF4CAF50).withOpacity(0.12);
                       trailingIcon = const Icon(Icons.check_circle, color: Color(0xFF4CAF50));
                     } else if (isWrong) {
                       borderColor = Colors.red;
-                      bgColor = Colors.red.withValues(alpha: 0.1);
+                      bgColor = Colors.red.withOpacity(0.1);
                       textColor = Colors.red;
                       trailingIcon = const Icon(Icons.cancel, color: Colors.red);
                     } else if (isSelected) {
                       borderColor = const Color(0xFF6C63FF);
-                      bgColor = const Color(0xFF6C63FF).withValues(alpha: 0.12);
+                      bgColor = const Color(0xFF6C63FF).withOpacity(0.12);
                     }
 
                     return GestureDetector(
@@ -136,7 +150,7 @@ class QuizScreen extends ConsumerWidget {
                               height: 32,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: isSelected || isCorrect ? borderColor.withValues(alpha: 0.2) : const Color(0xFF2E2E3E),
+                                color: isSelected || isCorrect ? borderColor.withOpacity(0.2) : const Color(0xFF2E2E3E),
                               ),
                               child: Center(
                                 child: Text(
@@ -150,13 +164,13 @@ class QuizScreen extends ConsumerWidget {
                             ),
                             const SizedBox(width: 14),
                             Expanded(child: Text(options[i], style: TextStyle(color: textColor, fontSize: 15))),
-                            if (trailingIcon != null) trailingIcon,
+                            ?trailingIcon,
                           ],
                         ),
                       ),
                     );
                   }),
-                  if (state.isAnswerChecked && q.explanation != null && q.explanation!.isNotEmpty) ...[
+                  if (state.isAnswerChecked && (q.explanation?.isNotEmpty ?? false)) ...[
                     const SizedBox(height: 8),
                     Container(
                       padding: const EdgeInsets.all(14),

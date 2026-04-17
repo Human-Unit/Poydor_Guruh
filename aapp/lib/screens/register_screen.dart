@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -51,6 +53,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black87;
+
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -66,9 +72,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Text(
+                Text(
                   'Create Account',
-                  style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.white),
+                  style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: textColor),
                 ),
                 const SizedBox(height: 6),
                 const Text('Join and start practicing', style: TextStyle(color: Colors.grey)),
@@ -77,9 +83,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.red.withValues(alpha: 0.1),
+                      color: Colors.red.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+                      border: Border.all(color: Colors.red.withOpacity(0.3)),
                     ),
                     child: Text(_error, style: const TextStyle(color: Colors.red), textAlign: TextAlign.center),
                   ),

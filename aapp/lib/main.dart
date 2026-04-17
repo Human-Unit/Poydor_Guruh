@@ -1,5 +1,8 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'providers/theme_provider.dart';
 import 'router.dart';
 
 void main() {
@@ -7,16 +10,82 @@ void main() {
   runApp(const ProviderScope(child: DriverExamApp()));
 }
 
-class DriverExamApp extends StatelessWidget {
+class DriverExamApp extends ConsumerWidget {
   const DriverExamApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final router = ref.watch(routerProvider);
+    final themeMode = ref.watch(themeProvider);
+
     return MaterialApp.router(
       title: 'Driver Exam Prep',
       debugShowCheckedModeBanner: false,
       scrollBehavior: const AppScrollBehavior(),
+      themeMode: themeMode,
+      
+      // Light Mode (White Theme)
       theme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF6C63FF),
+          brightness: Brightness.light,
+          surface: const Color(0xFFF5F5FA),
+        ),
+        scaffoldBackgroundColor: const Color(0xFFF5F5FA),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFFF5F5FA),
+          elevation: 0,
+          centerTitle: true,
+          iconTheme: IconThemeData(color: Colors.black87),
+          titleTextStyle: TextStyle(color: Colors.black87, fontSize: 20, fontWeight: FontWeight.bold),
+        ),
+        cardTheme: CardThemeData(
+          color: Colors.white,
+          elevation: 2,
+          shadowColor: Colors.black.withOpacity(0.05),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF6C63FF),
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: Colors.white,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFF6C63FF), width: 2),
+          ),
+          labelStyle: const TextStyle(color: Colors.grey),
+        ),
+        navigationBarTheme: NavigationBarThemeData(
+          backgroundColor: Colors.white,
+          indicatorColor: const Color(0xFF6C63FF).withOpacity(0.15),
+          iconTheme: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) {
+              return const IconThemeData(color: Color(0xFF6C63FF));
+            }
+            return const IconThemeData(color: Colors.grey);
+          }),
+        ),
+      ),
+
+      // Dark Mode (Black Theme - Main)
+      darkTheme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color(0xFF6C63FF),
@@ -29,7 +98,7 @@ class DriverExamApp extends StatelessWidget {
           centerTitle: true,
         ),
         cardTheme: CardThemeData(
-          color: const Color(0xFF1E1E2E),
+          color: const Color(0xFF1E1E2E), // Surface colors adapted
           elevation: 0,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         ),
@@ -59,8 +128,19 @@ class DriverExamApp extends StatelessWidget {
           ),
           labelStyle: const TextStyle(color: Colors.grey),
         ),
+        navigationBarTheme: NavigationBarThemeData(
+          backgroundColor: const Color(0xFF1A1A2E),
+          indicatorColor: const Color(0xFF6C63FF).withOpacity(0.15),
+          iconTheme: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) {
+              return const IconThemeData(color: Color(0xFF6C63FF));
+            }
+            return const IconThemeData(color: Colors.grey);
+          }),
+        ),
       ),
-      routerConfig: appRouter,
+      
+      routerConfig: router,
     );
   }
 }

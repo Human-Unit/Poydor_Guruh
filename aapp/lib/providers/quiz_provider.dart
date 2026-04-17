@@ -1,9 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/question.dart';
 import '../services/api_service.dart';
+import 'api_provider.dart';
 
 final quizProvider = StateNotifierProvider<QuizNotifier, QuizState>((ref) {
-  return QuizNotifier();
+  final apiService = ref.read(apiServiceProvider);
+  return QuizNotifier(apiService);
 });
 
 class QuizState {
@@ -14,7 +16,7 @@ class QuizState {
   final int? selectedOptionIndex;
   final bool isAnswerChecked;
   final bool isLoading;
-  final List<Map<String, dynamic>> answers; // To store answers for submission
+  final List<Map<String, dynamic>> answers;
 
   QuizState({
     required this.questions,
@@ -52,9 +54,9 @@ class QuizState {
 }
 
 class QuizNotifier extends StateNotifier<QuizState> {
-  final ApiService _apiService = ApiService();
+  final ApiService _apiService;
 
-  QuizNotifier() : super(QuizState(questions: []));
+  QuizNotifier(this._apiService) : super(QuizState(questions: []));
 
   Future<void> startQuiz(int lessonId) async {
     state = state.cloneWith(
